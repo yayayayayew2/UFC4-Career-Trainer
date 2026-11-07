@@ -1,0 +1,1298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="45">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>0</ID>
+      <Description>"Weekly Point - Lock 100"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+UFC4_set('weekly', true)
+{$asm}
+
+[DISABLE]
+{$lua}
+UFC4_set('weekly', false)
+{$asm}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"Evo Point - Auto 5000 if below 100 (NUMPAD 9)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+UFC4_set('evo', true)
+{$asm}
+
+[DISABLE]
+{$lua}
+UFC4_set('evo', false)
+{$asm}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"Fitness - Keep at Peak 95-105% (NUMPAD /)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+UFC4_set('fitness', true)
+{$asm}
+
+[DISABLE]
+{$lua}
+UFC4_set('fitness', false)
+{$asm}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>13</ID>
+      <Description>"Move EXP - AUTO in sparring (NUMPAD -)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+UFC4_set('move', true)
+{$asm}
+
+[DISABLE]
+{$lua}
+UFC4_set('move', false)
+{$asm}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>24</ID>
+      <Description>"Money - below 30000 becomes 5,000,000 (NUMPAD 0)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+UFC4_set('money', true)
+{$asm}
+
+[DISABLE]
+{$lua}
+UFC4_set('money', false)
+{$asm}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>100</ID>
+      <Description>"[STAMINA] Install hook + NUMPAD keys (NUMPAD *, inside a fight)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+STAM_on()
+{$asm}
+
+[DISABLE]
+{$lua}
+STAM_off()
+{$asm}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>101</ID>
+      <Description>"[STAMINA] Player yellow: unlimited (NUMPAD 8)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+REAL_yellowOn()
+{$asm}
+
+[DISABLE]
+{$lua}
+REAL_yellowOff()
+{$asm}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>102</ID>
+      <Description>"[STAMINA] Player white: hold max (NUMPAD 7)"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+{$lua}
+REAL_whiteOn()
+{$asm}
+
+[DISABLE]
+{$lua}
+REAL_whiteOffN()
+{$asm}
+</AssemblerScript>
+    </CheatEntry>
+  </CheatEntries>
+  <LuaScript>-- ============================================================
+-- UFC 4 - TABEL GABUNGAN (versi ringan)
+--
+-- TOMBOL (NumLock harus menyala):
+--   NUMPAD 9 = Evo Point          NUMPAD 0 = Uang
+--   NUMPAD / = Fitness            NUMPAD - = Move EXP
+--   NUMPAD + = semua career (Weekly, Evo, Fitness, Move, Uang) nyala / mati
+--   NUMPAD * = pasang / lepas hook STAMINA (lakukan di dalam fight)
+--  Setelah hook stamina terpasang:
+--   NUMPAD 4 = reset | 5 = aku di KIRI | 6 = aku di KANAN
+--   NUMPAD 8 = kuning on/off | 7 = putih on/off | 3 = matikan keduanya
+--   NUMPAD 1 / 2 = uji dan pilih objek manual (cadangan)
+-- Weekly Point: hanya lewat centang di tabel (atau NUMPAD +).
+--
+-- Notifikasi berupa kotak teks (overlay) di pojok kiri atas layar.
+-- ============================================================
+
+-- ============================================================
+-- BAGIAN A: NOTIFIKASI OVERLAY
+-- Catatan: overlay terlihat kalau game borderless/windowed. Di full screen
+-- eksklusif Windows bisa menyembunyikannya, dan jendelanya bisa membuat
+-- game kehilangan fokus sesaat.
+-- ============================================================
+UFC4_NOTIF = {
+  seconds = 2.8,   -- lama overlay tampil (detik)
+  x = 24, y = 24,  -- posisi di layar
+  width = 540,
+  alpha = 235      -- transparansi 0-255 (255 = solid)
+}
+UFC4_quiet = false
+
+-- Warna (urutan BGR). Ubah sesuka hati.
+UFC4_THEME = {
+  bg    = 0x1A1412,  -- latar panel
+  line  = 0x342C28,  -- garis / track progress
+  text  = 0xFFFFFF,
+  mute  = 0xA0928C,
+  faint = 0x82746E,
+  on    = 0x78C850,  -- hijau  : aktif
+  off   = 0x32AAFF,  -- oranye : nonaktif
+  err   = 0x5050F0,  -- merah  : gagal
+  info  = 0xFFA050   -- biru   : info / memuat
+}
+
+-- Tentukan jenis notifikasi dari teksnya
+function UFC4_kind(text)
+  local s = string.lower(text)
+  if s:find('failed') or s:find('not installed') or s:find('not detected') or s:find('not found') then return 'err', 'ERROR' end
+  if s:find('installing') or s:find('please wait') then return 'info', 'LOADING' end
+  if s:find('%f[%a]off%f[%A]') or s:find('disabled') or s:find('removed') then return 'off', 'OFF' end
+  if s:find('%f[%a]on%f[%A]') or s:find('enabled') or s:find('installed') or s:find('selected')
+     or s:find('%f[%a]ok%f[%A]') then return 'on', 'ACTIVE' end
+  return 'info', 'INFO'
+end
+
+-- Daftar fitur yang sedang menyala (untuk baris bawah overlay)
+function UFC4_activeList()
+  local al = getAddressList()
+  local items = {{0, 'Weekly'}, {1, 'Evo'}, {2, 'Fitness'}, {13, 'Move'}, {24, 'Money'},
+                 {100, 'Stamina'}, {101, 'Yellow'}, {102, 'White'}}
+  local act = {}
+  for _, it in ipairs(items) do
+    local mr = al.getMemoryRecordByID(it[1])
+    if mr and mr.Active then act[#act + 1] = it[2] end
+  end
+  if #act == 0 then return 'No active features' end
+  return table.concat(act, '   |   ')
+end
+
+-- Bangun jendela overlay (sekali saja)
+function UFC4_ovBuild()
+  local n = UFC4_NOTIF
+  local th = UFC4_THEME
+  local W, H = n.width, 96
+  local o = {}
+
+  local f = createForm(false)
+  f.BorderStyle = 'bsNone'
+  f.FormStyle = 'fsSystemStayOnTop'
+  f.Width = W
+  f.Height = H
+  f.Color = th.on
+  pcall(function() f.AlphaBlend = true f.AlphaBlendValue = n.alpha end)
+  pcall(function() f.ShowInTaskBar = 'stNever' end)
+  o.form = f
+
+  local function panel(l, t, w, h, color)
+    local p = createPanel(f)
+    p.Caption = ''
+    p.BevelOuter = 'bvNone'
+    p.Left = l
+    p.Top = t
+    p.Width = w
+    p.Height = h
+    p.Color = color
+    return p
+  end
+
+  local function label(l, t, w, h, size, color, bold)
+    local lb = createLabel(o.bg)
+    lb.AutoSize = false
+    lb.Left = l
+    lb.Top = t
+    lb.Width = w
+    lb.Height = h
+    lb.Font.Name = 'Segoe UI'
+    lb.Font.Size = size
+    lb.Font.Color = color
+    if bold then pcall(function() lb.Font.Style = '[fsBold]' end) end
+    return lb
+  end
+
+  -- panel isi (sisa 1 px di tepi = garis berwarna sesuai jenis notifikasi)
+  -- Label harus menjadi anak panel isi: kontrol berjendela (panel) selalu menimpa label
+  -- yang menempel langsung di form, itu sebabnya teks tadi tidak kelihatan.
+  o.bg = panel(1, 1, W - 2, H - 2, th.bg)
+  o.strip = panel(1, 1, 4, H - 2, th.on)
+
+  local title = label(18, 8, 200, 14, 8, th.mute, true)
+  title.Caption = 'UFC 4   TRAINER'
+  o.badge = label(W - 110, 8, 98, 14, 8, th.on, true)
+  o.badge.Alignment = 'taRightJustify'
+
+  o.msg = label(18, 26, W - 36, 38, 11, th.text, true)
+  o.msg.WordWrap = true
+
+  panel(18, 66, W - 36, 1, th.line)
+  o.foot = label(18, 72, W - 36, 14, 8, th.faint, false)
+
+  -- bar waktu di bagian bawah
+  o.trackW = W - 2
+  panel(1, H - 4, o.trackW, 3, th.line)
+  o.fill = panel(1, H - 4, o.trackW, 3, th.on)
+
+  local t = createTimer(nil, false)
+  t.Interval = 40
+  t.OnTimer = function(tm)
+    local left = o.endAt - getTickCount()
+    if left > 0 then
+      o.fill.Width = math.floor(o.trackW * left / o.total)
+    else
+      tm.Enabled = false
+      o.form.Visible = false
+    end
+  end
+  o.timer = t
+
+  UFC4_ov = o
+end
+
+function UFC4_overlayShow(text)
+  local n = UFC4_NOTIF
+  local th = UFC4_THEME
+  if not UFC4_ov then UFC4_ovBuild() end
+  local o = UFC4_ov
+  local kind, tag = UFC4_kind(text)
+  local c = th[kind]
+  o.form.Color = c
+  o.strip.Color = c
+  o.fill.Color = c
+  o.badge.Font.Color = c
+  o.badge.Caption = tag
+  o.msg.Caption = text
+  o.foot.Caption = UFC4_activeList()
+  o.form.Left = n.x
+  o.form.Top = n.y
+  o.total = n.seconds * 1000
+  o.endAt = getTickCount() + o.total
+  o.fill.Width = o.trackW
+  o.form.Visible = true
+  pcall(function() o.form.update() end)
+  o.timer.Enabled = true
+end
+
+function UFC4_notify(text)
+  print(text)
+  if UFC4_quiet then return end
+  pcall(UFC4_overlayShow, text)
+end
+
+-- Jalankan pekerjaan berat DI LUAR callback tombol (lewat timer sekali jalan).
+-- Pekerjaan berat (pemindaian memori) di dalam callback hotkey bisa membuat CE not responding,
+-- sedangkan lewat centang di tabel aman. Dengan cara ini tombol berjalan seperti klik centang.
+function UFC4_defer(fn)
+  local t = createTimer(nil, false)
+  t.Interval = 50
+  t.OnTimer = function(tm)
+    tm.Enabled = false
+    pcall(fn)
+    pcall(function() tm.destroy() end)
+  end
+  t.Enabled = true
+end
+
+-- Hilangkan centang sebuah entri sesaat lagi (dipakai kalau pemasangan gagal)
+function UFC4_uncheck(id)
+  local t = createTimer(nil, false)
+  t.Interval = 150
+  t.OnTimer = function(tm)
+    tm.Enabled = false
+    pcall(function()
+      local mr = getAddressList().getMemoryRecordByID(id)
+      if mr and mr.Active then mr.Active = false end
+    end)
+    pcall(function() tm.destroy() end)
+  end
+  t.Enabled = true
+end
+
+-- ============================================================
+-- BAGIAN B: CAREER MODE - Weekly Point, Evo Point, Fitness, Uang, Move EXP
+-- Ubah angka di bawah ini kalau mau nilai lain (desimal)
+-- ============================================================
+UFC4_CFG = {
+  weekly = 100,   -- weekly point selalu dipaksa jadi angka ini (maks 127)
+  evoMin = 100,   -- kalau evo point di bawah angka ini...
+  evoSet = 5000,  -- ...otomatis diganti jadi angka ini (maks 16383)
+
+  fitIdx   = 26,     -- index dword fitness (0x1A)
+  fitShift = 17,     -- posisi bit field fitness (coba 0 kalau tidak berubah)
+  fitMin   = 9500,   -- di bawah ini dianggap keluar dari Peak
+  fitMax   = 10500,  -- di atas ini dianggap keluar dari Peak
+  fitSet   = 10000,  -- nilai pengganti (100%)
+
+  moneyIdx     = 16,
+  moneyShift   = 0,
+  moneyTrigger = 30000,    -- uang di bawah angka ini dianggap "kurang"
+  moneyMin     = 100,      -- di bawah angka ini diabaikan (data kosong)
+  moneyTarget  = 5000000,  -- uang diganti jadi angka ini
+  moneyBits    = 24,
+
+  moveMin  = 0,
+  moveMax  = 2047,
+  moveMinGain = 10,
+  moveMaxGain = 30000,
+  moveSet  = 100000, -- exp move dipaksa naik ke angka ini kalau lebih kecil
+  moveMode = 'auto', -- 'auto' | 'mult' | 'set'
+  moveMult = 4,
+  moveCap  = 100000
+}
+
+UFC4_PATTERN = "41 D3 E1 44 09 C8 89 04 B2 C3"
+UFC4_TARGET  = "8013008A3"
+UFC4_RANGES = {
+  {"8013008A3", "8013008B3"},
+  {"801300000", "801301000"},
+  {"800000000", "802000000"}
+}
+UFC4_ORIGB = {0x41,0xD3,0xE1,0x44,0x09,0xC8,0x89,0x04,0xB2,0xC3}
+UFC4_HOOKB = {0x41,0xD3,0xE1,0xE9,false,false,false,false,0x90,0xC3}
+UFC4_ORIG6 = {0x44,0x09,0xC8,0x89,0x04,0xB2}
+
+function UFC4_maskw(w)
+  local m = 1
+  for i = 1, w do m = m * 2 end
+  return m - 1
+end
+
+function UFC4_findPattern(startA, pages, pat)
+  local n = #pat
+  local res = {}
+  for pg = 0, pages - 1 do
+    local a = startA + pg * 4096
+    local blk = readBytes(a, 4096 + n, true)
+    if not blk then blk = readBytes(a, 4096, true) end
+    if blk then
+      for i = 1, 4096 do
+        local ok = true
+        for j = 1, n do
+          local pv = pat[j]
+          if pv ~= false and blk[i + j - 1] ~= pv then ok = false break end
+        end
+        if ok then res[#res + 1] = a + i - 1 end
+      end
+    end
+  end
+  return res
+end
+
+function UFC4_matches(addr, pat)
+  local b = readBytes(addr, #pat, true)
+  if not b then return false end
+  for j = 1, #pat do
+    if pat[j] ~= false and b[j] ~= pat[j] then return false end
+  end
+  return true
+end
+
+function UFC4_restoreStray()
+  local hits = UFC4_findPattern(0x801300000, 1, UFC4_HOOKB)
+  for _, h in ipairs(hits) do
+    writeBytes(h + 3, UFC4_ORIG6)
+  end
+end
+
+function UFC4_body()
+  local c = UFC4_CFG
+  local m = 1
+  for i = 1, c.fitShift do m = m * 2 end
+  local mask = 16383 * m
+  local body = [[
+alloc(UFC4_mem,1000,UFC4_PTS+3)
+label(UFC4_code)
+label(UFC4_weekly)
+label(UFC4_evo)
+label(UFC4_fit)
+label(UFC4_wend)
+label(UFC4_eend)
+label(UFC4_fend)
+label(UFC4_fforce)
+label(UFC4_money)
+label(UFC4_mend)
+label(UFC4_done)
+label(UFC4_ret)
+registersymbol(UFC4_mem)
+
+UFC4_mem:
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+UFC4_code:
+  or eax,r9d
+  inc dword ptr [UFC4_mem+4]
+  cmp esi,8
+  je UFC4_weekly
+  cmp esi,0D
+  je UFC4_evo
+  cmp esi,@FITIDX@
+  je UFC4_fit
+  cmp esi,@MONEYIDX@
+  je UFC4_money
+  jmp UFC4_done
+
+UFC4_weekly:
+  cmp byte ptr [UFC4_mem],0
+  je UFC4_done
+  test cl,1F
+  jnz UFC4_done
+  inc dword ptr [UFC4_mem+8]
+  mov [UFC4_mem+18],eax
+  push r9
+  mov r9d,eax
+  and r9d,7F
+  cmp r9d,@WEEKLY@
+  ja UFC4_wend
+  and eax,FFFFFF80
+  or eax,@WEEKLY@
+  inc dword ptr [UFC4_mem+10]
+UFC4_wend:
+  pop r9
+  jmp UFC4_done
+
+UFC4_evo:
+  cmp byte ptr [UFC4_mem+1],0
+  je UFC4_done
+  inc dword ptr [UFC4_mem+0C]
+  mov [UFC4_mem+1C],eax
+  push r9
+  mov r9d,eax
+  and r9d,3FFF
+  cmp r9d,@EVOMIN@
+  jae UFC4_eend
+  and eax,FFFFC000
+  or eax,@EVOSET@
+  inc dword ptr [UFC4_mem+14]
+UFC4_eend:
+  pop r9
+  jmp UFC4_done
+
+UFC4_fit:
+  cmp byte ptr [UFC4_mem+2],0
+  je UFC4_done
+  push r9
+  mov r9d,ecx
+  and r9d,1F
+  cmp r9d,@FITSHIFT@
+  jne UFC4_fend
+  inc dword ptr [UFC4_mem+20]
+  mov r9d,eax
+  and r9d,@FITMASK@
+  shr r9d,@FITSHIFT@
+  mov [UFC4_mem+28],r9d
+  cmp r9d,@FITMIN@
+  jb UFC4_fforce
+  cmp r9d,@FITMAX@
+  jbe UFC4_fend
+UFC4_fforce:
+  and eax,@FITNOTMASK@
+  or eax,@FITSETSH@
+  inc dword ptr [UFC4_mem+24]
+UFC4_fend:
+  pop r9
+  jmp UFC4_done
+
+UFC4_money:
+  push r9
+  mov r9d,ecx
+  and r9d,1F
+  cmp r9d,@MONEYSHIFT@
+  jne UFC4_mend
+  mov [UFC4_mem+30],eax
+  inc dword ptr [UFC4_mem+34]
+  cmp byte ptr [UFC4_mem+3],0
+  je UFC4_mend
+  mov r9d,eax
+  and r9d,@MONEYMASK@
+  cmp r9d,@MONEYLOW@
+  jb UFC4_mend
+  cmp r9d,@MONEYTRIG@
+  jae UFC4_mend
+  and eax,@MONEYNOTMASK@
+  or eax,@MONEYSET@
+  inc dword ptr [UFC4_mem+3C]
+UFC4_mend:
+  pop r9
+  jmp UFC4_done
+
+UFC4_done:
+  mov [rdx+rsi*4],eax
+  jmp UFC4_ret
+
+UFC4_PTS+3:
+  jmp UFC4_code
+  nop
+UFC4_ret:
+]]
+  local function rep(k, v)
+    body = (body:gsub("@" .. k .. "@", v))
+  end
+  rep("WEEKLY", string.format("%X", c.weekly))
+  rep("EVOMIN", string.format("%X", c.evoMin))
+  rep("EVOSET", string.format("%X", c.evoSet))
+  rep("FITIDX", string.format("%X", c.fitIdx))
+  rep("FITSHIFT", string.format("%X", c.fitShift))
+  rep("FITMASK", string.format("%X", mask))
+  rep("FITNOTMASK", string.format("%X", 4294967295 - mask))
+  rep("FITMIN", string.format("%X", c.fitMin))
+  rep("FITMAX", string.format("%X", c.fitMax))
+  rep("FITSETSH", string.format("%X", c.fitSet * m))
+  local mm = 1
+  for i = 1, c.moneyShift do mm = mm * 2 end
+  local mmask = UFC4_maskw(c.moneyBits) * mm
+  rep("MONEYIDX", string.format("%X", c.moneyIdx))
+  rep("MONEYSHIFT", string.format("%X", c.moneyShift))
+  rep("MONEYMASK", string.format("%X", mmask))
+  rep("MONEYNOTMASK", string.format("%X", 4294967295 - mmask))
+  rep("MONEYLOW", string.format("%X", c.moneyMin * mm))
+  rep("MONEYTRIG", string.format("%X", c.moneyTrigger * mm))
+  rep("MONEYSET", string.format("%X", c.moneyTarget * mm))
+  return body
+end
+
+function UFC4_cleanup()
+  pcall(unregisterSymbol, 'UFC4_mem')
+  pcall(unregisterSymbol, 'UFC4_PTS')
+end
+
+function UFC4_valid()
+  local mem = getAddressSafe('UFC4_mem')
+  local pts = getAddressSafe('UFC4_PTS')
+  if (not mem) or (not pts) then return false end
+  local b = readBytes(pts + 3, 1, false)
+  local f = readBytes(mem, 1, false)
+  if b == nil or f == nil then return false end
+  if b ~= 0xE9 then return false end
+  local tgt = tonumber(UFC4_TARGET, 16)
+  if pts ~= tgt and UFC4_matches(tgt, UFC4_ORIGB) then return false end
+  return true
+end
+
+function UFC4_install()
+  local pid = getOpenedProcessID()
+  if UFC4_pid ~= pid then
+    UFC4_cleanup()
+    UFC4_pid = pid
+  elseif UFC4_valid() then
+    return true
+  else
+    UFC4_cleanup()
+  end
+
+  UFC4_restoreStray()
+
+  for i, r in ipairs(UFC4_RANGES) do
+    local head = string.format("aobscanregion(UFC4_PTS,%s,%s,%s)\nregistersymbol(UFC4_PTS)\n",
+                               r[1], r[2], UFC4_PATTERN)
+    local ok, err = autoAssemble(head .. UFC4_body())
+    if ok then return true end
+    UFC4_cleanup()
+  end
+  return false
+end
+
+-- ============================================================
+-- HOOK KEDUA: EXP MOVE
+-- ============================================================
+UFC4_MVPATTERN = "48 8B 8D 78 FF FF FF 44 89 AC 88 5C 08 00 00 48 8B 4D 88"
+UFC4_MVTARGET  = "8009218F7"
+UFC4_MVRANGES = {
+  {"8009218F7", "800921910"},
+  {"800921000", "800922000"},
+  {"800000000", "802000000"}
+}
+UFC4_MVORIG = {0x48,0x8B,0x8D,0x78,0xFF,0xFF,0xFF,0x44,0x89,0xAC,0x88,0x5C,0x08,0x00,0x00,0x48,0x8B,0x4D,0x88}
+UFC4_MVHOOK = {0x48,0x8B,0x8D,0x78,0xFF,0xFF,0xFF,0xE9,false,false,false,false,0x90,0x90,0x90,0x48,0x8B,0x4D,0x88}
+UFC4_MVORIG8 = {0x44,0x89,0xAC,0x88,0x5C,0x08,0x00,0x00}
+
+function UFC4_mvBody()
+  local c = UFC4_CFG
+  local setPath = [[
+  cmp r13d,@EXPSET@
+  jae MV_store
+  inc dword ptr [UFC4_mv+1C]
+  push r13
+  mov r13d,@EXPSET@
+  mov [rax+rcx*4+85C],r13d
+  pop r13
+  jmp MV_ret
+]]
+  local multPath = [[
+  push r13
+  sub r13d,[rax+rcx*4+85C]
+  jle MV_restore
+  cmp r13d,@MINGAIN@
+  jb MV_restore
+  cmp r13d,@MAXGAIN@
+  ja MV_restore
+  imul r13d,r13d,@MULT@
+  add r13d,[rax+rcx*4+85C]
+  cmp r13d,@CAP@
+  jbe MV_ok
+  mov r13d,@CAP@
+MV_ok:
+  inc dword ptr [UFC4_mv+1C]
+  mov [rax+rcx*4+85C],r13d
+  pop r13
+  jmp MV_ret
+MV_restore:
+  pop r13
+  jmp MV_store
+]]
+  local autoPath = [[
+  push r13
+  sub r13d,[rax+rcx*4+85C]
+  jle MV_restore
+  cmp r13d,@MINGAIN@
+  jb MV_restore
+  cmp r13d,@MAXGAIN@
+  ja MV_restore
+  cmp dword ptr [rax+rcx*4+85C],@EXPSET@
+  jae MV_restore
+  inc dword ptr [UFC4_mv+1C]
+  mov [UFC4_mv+20],ecx
+  mov r13d,@EXPSET@
+  mov [rax+rcx*4+85C],r13d
+  pop r13
+  jmp MV_ret
+MV_restore:
+  pop r13
+  jmp MV_store
+]]
+  local labels = "label(MV_store)\n"
+  local path = setPath
+  if c.moveMode == 'mult' then
+    path = multPath
+    labels = "label(MV_store)\nlabel(MV_ok)\nlabel(MV_restore)\n"
+  elseif c.moveMode == 'auto' then
+    path = autoPath
+    labels = "label(MV_store)\nlabel(MV_restore)\n"
+  end
+  local body = [[
+alloc(UFC4_mv,1000,UFC4_MVP+7)
+label(MV_code)
+label(MV_nodelta)
+@LABELS@label(MV_ret)
+registersymbol(UFC4_mv)
+
+UFC4_mv:
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+MV_code:
+  inc dword ptr [UFC4_mv+4]
+  mov [UFC4_mv+8],rax
+  mov [UFC4_mv+10],ecx
+  mov [UFC4_mv+14],r13d
+  cmp byte ptr [UFC4_mv],0
+  je MV_store
+  push r13
+  sub r13d,[rax+rcx*4+85C]
+  jle MV_nodelta
+  mov [UFC4_mv+24],ecx
+  mov [UFC4_mv+28],r13d
+  inc dword ptr [UFC4_mv+2C]
+MV_nodelta:
+  pop r13
+  cmp ecx,@IDXMIN@
+  jb MV_store
+  cmp ecx,@IDXMAX@
+  ja MV_store
+  inc dword ptr [UFC4_mv+18]
+@PATH@
+MV_store:
+  mov [rax+rcx*4+85C],r13d
+  jmp MV_ret
+
+UFC4_MVP+7:
+  jmp MV_code
+  nop
+  nop
+  nop
+MV_ret:
+]]
+  body = body:gsub("@LABELS@", function() return labels end)
+  body = body:gsub("@PATH@", function() return path end)
+  local function rep(k, v)
+    body = (body:gsub("@" .. k .. "@", v))
+  end
+  rep("IDXMIN", string.format("%X", c.moveMin))
+  rep("IDXMAX", string.format("%X", c.moveMax))
+  rep("EXPSET", string.format("%X", c.moveSet))
+  rep("MULT", string.format("%X", c.moveMult))
+  rep("MINGAIN", string.format("%X", c.moveMinGain))
+  rep("MAXGAIN", string.format("%X", c.moveMaxGain))
+  rep("CAP", string.format("%X", c.moveCap))
+  return body
+end
+
+function UFC4_mvCleanup()
+  pcall(unregisterSymbol, 'UFC4_mv')
+  pcall(unregisterSymbol, 'UFC4_MVP')
+end
+
+function UFC4_mvValid()
+  local mem = getAddressSafe('UFC4_mv')
+  local pts = getAddressSafe('UFC4_MVP')
+  if (not mem) or (not pts) then return false end
+  local b = readBytes(pts + 7, 1, false)
+  local f = readBytes(mem, 1, false)
+  if b == nil or f == nil then return false end
+  if b ~= 0xE9 then return false end
+  local tgt = tonumber(UFC4_MVTARGET, 16)
+  if pts ~= tgt and UFC4_matches(tgt, UFC4_MVORIG) then return false end
+  return true
+end
+
+function UFC4_mvRestoreStray()
+  local hits = UFC4_findPattern(0x800921000, 1, UFC4_MVHOOK)
+  for _, h in ipairs(hits) do
+    writeBytes(h + 7, UFC4_MVORIG8)
+  end
+end
+
+function UFC4_mvInstall()
+  local pid = getOpenedProcessID()
+  if UFC4_mvpid ~= pid then
+    UFC4_mvCleanup()
+    UFC4_mvpid = pid
+  elseif UFC4_mvValid() then
+    return true
+  else
+    UFC4_mvCleanup()
+  end
+
+  UFC4_mvRestoreStray()
+
+  for i, r in ipairs(UFC4_MVRANGES) do
+    local head = string.format("aobscanregion(UFC4_MVP,%s,%s,%s)\nregistersymbol(UFC4_MVP)\n",
+                               r[1], r[2], UFC4_MVPATTERN)
+    local ok, err = autoAssemble(head .. UFC4_mvBody())
+    if ok then return true end
+    UFC4_mvCleanup()
+  end
+  return false
+end
+
+UFC4_NAMES = {
+  weekly  = 'Weekly point',
+  evo     = 'Evo point',
+  fitness = 'Fitness',
+  money   = 'Money',
+  move    = 'Move EXP'
+}
+UFC4_IDS = { weekly = 0, evo = 1, fitness = 2, move = 13, money = 24 }
+
+-- Nyalakan / matikan fitur career. Tidak pernah memunculkan dialog error
+-- (dialog bisa tersembunyi di belakang game full screen dan membuat CE tampak freeze).
+function UFC4_set(which, on)
+  local nm = UFC4_NAMES[which] or which
+  if which == 'move' then
+    if on then
+      UFC4_notify('Installing ' .. nm .. '...')
+      if not UFC4_mvInstall() then
+        UFC4_notify('FAILED to install ' .. nm .. '. Enter career mode / a fight first')
+        UFC4_uncheck(UFC4_IDS[which])
+        return
+      end
+      writeBytes(getAddress('UFC4_mv'), 1)
+      UFC4_notify(nm .. ' ENABLED')
+    else
+      if UFC4_mvValid() then
+        writeBytes(getAddress('UFC4_mv'), 0)
+        UFC4_notify(nm .. ' disabled')
+      end
+    end
+    return
+  end
+  if on then
+    UFC4_notify('Installing ' .. nm .. '...')
+    if not UFC4_install() then
+      UFC4_notify('FAILED to install ' .. nm .. '. Enter career mode first')
+      UFC4_uncheck(UFC4_IDS[which])
+      return
+    end
+  else
+    if not UFC4_valid() then return end
+  end
+  local off = 1
+  if which == 'weekly' then off = 0 end
+  if which == 'fitness' then off = 2 end
+  if which == 'money' then off = 3 end
+  local v = 0
+  if on then v = 1 end
+  writeBytes(getAddress('UFC4_mem') + off, v)
+  if on then UFC4_notify(nm .. ' ENABLED') else UFC4_notify(nm .. ' disabled') end
+end
+
+-- ============================================================
+-- BAGIAN C: STAMINA NYATA untuk PLAYER (kuning dan putih sendiri-sendiri)
+-- ============================================================
+REAL_keyIdx = 0
+REAL_WHITE_VALUE = 100.0
+REAL_ID_STAMINA = 100
+REAL_ID_YELLOW = 101
+REAL_ID_WHITE = 102
+REAL_HK = REAL_HK or {}
+REAL_quiet = false
+
+REAL_ENABLE_SCRIPT = [==[
+aobscanregion(REAL_HOOK,800000000,808000000,C5 FA 5D C1 C5 FA 11 00 49 8B 00)
+alloc(REAL_mem,$1000,REAL_HOOK)
+label(REAL_code)
+label(REAL_ret)
+label(REAL_s2)
+label(REAL_s3)
+label(REAL_s4)
+label(REAL_s5)
+label(REAL_s6)
+label(REAL_sdone)
+label(REAL_chk2)
+label(REAL_max)
+label(REAL_m1)
+label(REAL_cmpL)
+label(REAL_cmpR)
+label(REAL_notp)
+label(REAL_store)
+registersymbol(REAL_mem)
+registersymbol(REAL_HOOK)
+registersymbol(REAL_cmpL)
+registersymbol(REAL_cmpR)
+
+REAL_mem:
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  db 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+REAL_code:
+  vminss xmm0,xmm0,xmm1
+  inc dword ptr [REAL_mem+8]
+  mov [REAL_mem+10],rax
+  vmovss [REAL_mem+18],xmm0
+  vmovss [REAL_mem+1C],xmm1
+  cmp rax,[REAL_mem+50]
+  jne REAL_notp
+  vmovss [REAL_mem+58],xmm0
+  vmovss [REAL_mem+5C],xmm1
+  vmovss [REAL_mem+64],xmm4
+  vmovss [REAL_mem+6C],xmm2
+  vmovss xmm3,[rbp-4C]
+  vmovss [REAL_mem+60],xmm3
+  vmovss xmm3,[rbp-50]
+  vmovss [REAL_mem+68],xmm3
+  mov [REAL_mem+70],r13
+  inc dword ptr [REAL_mem+78]
+REAL_notp:
+  cmp rax,[REAL_mem+20]
+  je REAL_sdone
+  cmp qword ptr [REAL_mem+20],0
+  jne REAL_s2
+  mov [REAL_mem+20],rax
+  jmp REAL_sdone
+REAL_s2:
+  cmp rax,[REAL_mem+28]
+  je REAL_sdone
+  cmp qword ptr [REAL_mem+28],0
+  jne REAL_s3
+  mov [REAL_mem+28],rax
+  jmp REAL_sdone
+REAL_s3:
+  cmp rax,[REAL_mem+30]
+  je REAL_sdone
+  cmp qword ptr [REAL_mem+30],0
+  jne REAL_s4
+  mov [REAL_mem+30],rax
+  jmp REAL_sdone
+REAL_s4:
+  cmp rax,[REAL_mem+38]
+  je REAL_sdone
+  cmp qword ptr [REAL_mem+38],0
+  jne REAL_s5
+  mov [REAL_mem+38],rax
+  jmp REAL_sdone
+REAL_s5:
+  cmp rax,[REAL_mem+40]
+  je REAL_sdone
+  cmp qword ptr [REAL_mem+40],0
+  jne REAL_s6
+  mov [REAL_mem+40],rax
+  jmp REAL_sdone
+REAL_s6:
+  cmp rax,[REAL_mem+48]
+  je REAL_sdone
+  cmp qword ptr [REAL_mem+48],0
+  jne REAL_sdone
+  mov [REAL_mem+48],rax
+REAL_sdone:
+  cmp byte ptr [REAL_mem],3
+  je REAL_max
+  cmp byte ptr [REAL_mem],4
+  jne REAL_m1
+  cmp rax,[REAL_mem+50]
+  je REAL_max
+  jmp REAL_store
+REAL_m1:
+  cmp byte ptr [REAL_mem],1
+  jne REAL_chk2
+REAL_cmpL:
+  cmp dword ptr [rax+114],1
+  je REAL_max
+  jmp REAL_store
+REAL_chk2:
+  cmp byte ptr [REAL_mem],2
+  jne REAL_store
+REAL_cmpR:
+  cmp dword ptr [rax+114],0
+  jne REAL_store
+REAL_max:
+  vmovss [rax],xmm1
+  jmp REAL_ret
+REAL_store:
+  vmovss [rax],xmm0
+  jmp REAL_ret
+
+REAL_HOOK:
+  jmp REAL_code
+  nop 3
+REAL_ret:
+]==]
+
+REAL_DISABLE_SCRIPT = [==[
+REAL_HOOK:
+  db C5 FA 5D C1 C5 FA 11 00
+unregistersymbol(REAL_HOOK)
+unregistersymbol(REAL_cmpL)
+unregistersymbol(REAL_cmpR)
+unregistersymbol(REAL_mem)
+dealloc(REAL_mem)
+]==]
+
+-- Pasang hook stamina (tanpa dialog error)
+function STAM_on()
+  if getAddressSafe('REAL_mem') then
+    REAL_keys()
+    return
+  end
+  UFC4_notify('Installing stamina hook, please wait...')
+  local ok, err = autoAssemble(REAL_ENABLE_SCRIPT)
+  if not ok then
+    print('STAMINA: gagal - ' .. tostring(err))
+    UFC4_notify('FAILED to install stamina hook. Enter a fight first, then retry')
+    UFC4_uncheck(REAL_ID_STAMINA)
+    return
+  end
+  REAL_keys()
+end
+
+function STAM_off()
+  if not getAddressSafe('REAL_mem') then return end
+  pcall(REAL_keysOff)
+  pcall(autoAssemble, REAL_DISABLE_SCRIPT)
+end
+
+function REAL_say(text)
+  UFC4_notify(text)
+end
+
+function REAL_reset()
+  local mem = getAddressSafe('REAL_mem')
+  if not mem then REAL_say('Stamina hook not installed (NUMPAD *)') return end
+  for i = 0, 5 do writeQword(mem + 0x20 + i * 8, 0) end
+  writeQword(mem + 0x50, 0)
+  writeQword(mem + 0x70, 0)
+  writeInteger(mem + 0x78, 0)
+  REAL_keyIdx = 0
+  REAL_say('RESET OK. Play a few seconds, then press 5 (left) or 6 (right)')
+end
+
+-- ---------------- KUNING ----------------
+function REAL_yellowOn()
+  local mem = getAddressSafe('REAL_mem')
+  if not mem then
+    REAL_say('Stamina hook not installed (NUMPAD *)')
+    UFC4_uncheck(REAL_ID_YELLOW)
+    return
+  end
+  writeBytes(mem, 4)
+  local o = readQword(mem + 0x50)
+  if (not o) or o == 0 then
+    REAL_say('Yellow ON - select your side first: 5 left / 6 right')
+  else
+    REAL_say('Yellow ON')
+  end
+end
+
+function REAL_yellowOff()
+  local mem = getAddressSafe('REAL_mem')
+  if mem then writeBytes(mem, 0) end
+  REAL_say('Yellow OFF')
+end
+
+-- ---------------- PUTIH ----------------
+function REAL_whiteOff()
+  if REAL_whiteTimer then
+    REAL_whiteTimer.destroy()
+    REAL_whiteTimer = nil
+  end
+end
+
+function REAL_whiteOffN()
+  REAL_whiteOff()
+  REAL_say('White OFF')
+end
+
+function REAL_whiteOn()
+  local mem = getAddressSafe('REAL_mem')
+  if not mem then
+    REAL_say('Stamina hook not installed (NUMPAD *)')
+    UFC4_uncheck(REAL_ID_WHITE)
+    return
+  end
+  REAL_whiteOff()
+  local idle = 0
+  local lastHits = readInteger(mem + 0x78)
+  local t = createTimer(nil)
+  t.Interval = 20
+  t.OnTimer = function(timer)
+    -- hanya menulis kalau objek PLAYER yang dipilih masih aktif (penghitung di +78 naik).
+    -- Kalau fight baru dan player belum dipilih ulang, pointer lama basi dan TIDAK boleh ditulisi.
+    local hits = readInteger(mem + 0x78)
+    if hits == lastHits then
+      idle = idle + 1
+    else
+      idle = 0
+      lastHits = hits
+    end
+    if idle > 50 then return end
+    local r13 = readQword(mem + 0x70)
+    if r13 and r13 ~= 0 then
+      local pb = readQword(r13 + 0x30)
+      if pb and pb ~= 0 then
+        local cur = readFloat(pb)
+        if cur and cur == cur and cur > 0 and 200 > cur then writeFloat(pb, REAL_WHITE_VALUE) end
+      end
+    end
+  end
+  t.Enabled = true
+  REAL_whiteTimer = t
+  local o = readQword(mem + 0x50)
+  if (not o) or o == 0 then
+    REAL_say('White ON - select your side first: 5 left / 6 right')
+  else
+    REAL_say('White ON')
+  end
+end
+
+-- ---------------- pilih player dan tombol ----------------
+function REAL_setRecord(id, on)
+  local mr = getAddressList().getMemoryRecordByID(id)
+  if mr and mr.Active ~= on then
+    pcall(function() mr.Active = on end)
+  end
+end
+
+function REAL_flip(id)
+  local mr = getAddressList().getMemoryRecordByID(id)
+  if not mr then REAL_say('Table entry not found') return end
+  local want = not mr.Active
+  pcall(function() mr.Active = want end)
+end
+
+function REAL_allOff()
+  UFC4_quiet = true
+  REAL_setRecord(REAL_ID_YELLOW, false)
+  REAL_setRecord(REAL_ID_WHITE, false)
+  UFC4_quiet = false
+end
+
+function REAL_allOffN()
+  REAL_allOff()
+  REAL_say('Yellow and White OFF')
+end
+
+function REAL_keyProbe()
+  local mem = getAddressSafe('REAL_mem')
+  if not mem then REAL_say('Stamina hook not installed (NUMPAD *)') return end
+  for step = 1, 6 do
+    REAL_keyIdx = REAL_keyIdx % 6 + 1
+    local o = readQword(mem + 0x20 + (REAL_keyIdx - 1) * 8)
+    if o and o ~= 0 then
+      writeFloat(o, 20.0)
+      REAL_say('Probe object ' .. REAL_keyIdx .. ': did YOUR bar drop? Press 2. If not, press 1 again')
+      return
+    end
+  end
+  REAL_say('Objects not detected yet. Play a few seconds first')
+end
+
+function REAL_keyLock()
+  local mem = getAddressSafe('REAL_mem')
+  if not mem then REAL_say('Stamina hook not installed (NUMPAD *)') return end
+  local o = readQword(mem + 0x20 + (REAL_keyIdx - 1) * 8)
+  if (not o) or o == 0 then REAL_say('Press 1 first to pick an object') return end
+  writeQword(mem + 0x50, o)
+  REAL_say('Player selected (object ' .. REAL_keyIdx .. ')')
+end
+
+function REAL_keySide(val)
+  local mem = getAddressSafe('REAL_mem')
+  if not mem then REAL_say('Stamina hook not installed (NUMPAD *)') return end
+  local sideName = 'RIGHT'
+  if val == 1 then sideName = 'LEFT' end
+  for i = 1, 6 do
+    local o = readQword(mem + 0x20 + (i - 1) * 8)
+    if o and o ~= 0 then
+      local side = readInteger(o + 0x114)
+      if side == val then
+        REAL_keyIdx = i
+        writeQword(mem + 0x50, o)
+        REAL_say('Player ' .. sideName .. ' side SELECTED')
+        return
+      end
+    end
+  end
+  REAL_say('FAILED: ' .. sideName .. ' side not detected yet. Press 4, play a few seconds, retry')
+end
+
+function REAL_keysOff()
+  UFC4_quiet = true
+  REAL_allOff()
+  for _, hk in pairs(REAL_HK) do hk.destroy() end
+  REAL_HK = {}
+  REAL_whiteOff()
+  UFC4_quiet = false
+  UFC4_notify('Stamina hook REMOVED')
+end
+
+function REAL_keys()
+  UFC4_quiet = true
+  REAL_allOff()
+  for _, hk in pairs(REAL_HK) do hk.destroy() end
+  REAL_HK = {}
+  REAL_whiteOff()
+  UFC4_quiet = false
+  local function add(vk, fn)
+    REAL_HK[#REAL_HK + 1] = createHotkey(function() UFC4_defer(fn) end, vk)
+  end
+  add(0x61, function() REAL_keyProbe() end)
+  add(0x62, function() REAL_keyLock() end)
+  add(0x63, function() REAL_allOffN() end)
+  add(0x64, function() REAL_reset() end)
+  add(0x65, function() REAL_keySide(1) end)
+  add(0x66, function() REAL_keySide(0) end)
+  add(0x67, function() REAL_flip(REAL_ID_WHITE) end)
+  add(0x68, function() REAL_flip(REAL_ID_YELLOW) end)
+  UFC4_notify('Stamina hook INSTALLED. NUMPAD 4 reset, 5 left, 6 right')
+end
+
+-- ============================================================
+-- BAGIAN D: TOMBOL KEYBOARD UNTUK CAREER + HOOK STAMINA
+-- ============================================================
+UFC4_HK = UFC4_HK or {}
+UFC4_lastKey = 0
+
+-- Cegah tombol yang tertahan / ditekan berulang memicu aksi berkali-kali
+function UFC4_guard()
+  local t = getTickCount()
+  if (t - UFC4_lastKey) > 0 and 700 > (t - UFC4_lastKey) then return false end
+  UFC4_lastKey = t
+  return true
+end
+
+function UFC4_flip(which)
+  if not UFC4_guard() then return end
+  local id = UFC4_IDS[which]
+  if which == 'stamina' then id = REAL_ID_STAMINA end
+  local mr = getAddressList().getMemoryRecordByID(id)
+  if not mr then UFC4_notify('Table entry not found') return end
+  local want = not mr.Active
+  pcall(function() mr.Active = want end)
+end
+
+function UFC4_allCareer()
+  if not UFC4_guard() then return end
+  local order = {'weekly', 'evo', 'fitness', 'move', 'money'}
+  local al = getAddressList()
+  local allOn = true
+  for _, k in ipairs(order) do
+    local mr = al.getMemoryRecordByID(UFC4_IDS[k])
+    if mr and (not mr.Active) then allOn = false end
+  end
+  local want = not allOn
+  UFC4_quiet = true
+  for _, k in ipairs(order) do
+    local mr = al.getMemoryRecordByID(UFC4_IDS[k])
+    if mr and mr.Active ~= want then pcall(function() mr.Active = want end) end
+  end
+  UFC4_quiet = false
+  if want then UFC4_notify('All career features ENABLED') else UFC4_notify('All career features disabled') end
+end
+
+function UFC4_keys()
+  for _, hk in pairs(UFC4_HK) do hk.destroy() end
+  UFC4_HK = {}
+  local function add(vk, fn)
+    UFC4_HK[#UFC4_HK + 1] = createHotkey(function() UFC4_defer(fn) end, vk)
+  end
+  add(0x69, function() UFC4_flip('evo') end)
+  add(0x60, function() UFC4_flip('money') end)
+  add(0x6A, function() UFC4_flip('stamina') end)
+  add(0x6F, function() UFC4_flip('fitness') end)
+  add(0x6D, function() UFC4_flip('move') end)
+  add(0x6B, function() UFC4_allCareer() end)
+end
+
+UFC4_keys()
+
+-- Dipanggil CE saat membuka / ganti proses game
+function onOpenProcess(pid)
+  UFC4_cleanup()
+  UFC4_pid = nil
+  UFC4_mvCleanup()
+  UFC4_mvpid = nil
+  UFC4_quiet = true
+  local al = getAddressList()
+  for i = 0, al.Count - 1 do
+    local r = al[i]
+    if r.Type == vtAutoAssembler and r.Active then
+      pcall(function() r.Active = false end)
+    end
+  end
+  UFC4_quiet = false
+end
+</LuaScript>
+</CheatTable>
