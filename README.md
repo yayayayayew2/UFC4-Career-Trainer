@@ -61,7 +61,7 @@ Every hotkey is a **toggle**: press once to turn the feature on, press again to 
 
 1. Start the game and enter **Career Mode**.
 2. Open Cheat Engine and attach it to the UFC 4 process.
-3. Open `UFC4_Gabungan.CT` in Cheat Engine.
+3. Open `UFC4_CareerMode_Trainer.CT` in Cheat Engine.
 4. Press the hotkeys from the [Hotkey Reference](#hotkey-reference), or tick the entries manually in the table.
 5. Watch the [on-screen notification](#on-screen-notifications) to confirm each feature turned on.
 
