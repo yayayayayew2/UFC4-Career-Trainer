@@ -1,32 +1,47 @@
 <div align="center">
 
-# UFC 4 Career Mode Trainer
+# UFC 4 Career Mode Trainer v2.0
 
-**A Cheat Engine table for UFC 4 Career Mode, controlled entirely from your NUMPAD.**
+**A Cheat Engine table for UFC 4 Career Mode, controlled entirely from your NUMPAD, with an on-screen overlay.**
 
 ![Game](https://img.shields.io/badge/Game-UFC%204-red)
-![Tested on](https://img.shields.io/badge/Tested%20on-CUSA14204-blue)
+![Tested on](https://img.shields.io/badge/Tested%20on-CUSA14204%20%7C%20CUSA14209-blue)
 ![Tool](https://img.shields.io/badge/Tool-Cheat%20Engine-orange)
 ![Mode](https://img.shields.io/badge/Mode-Offline%20only-green)
+![Version](https://img.shields.io/badge/Version-2.0-purple)
 
 </div>
 
 > [!WARNING]
 > **Offline use only.** Do not use this online.
-> This table was made and tested **only on UFC 4 CUSA14204**. Other versions or regions may use different memory addresses, and features may not work or may fail to install. Use at your own risk and **back up your save before you start.**
+> This table was made and tested on **UFC 4 CUSA14204 and CUSA14209**. No bugs found so far on either version. Other versions or regions may use different memory addresses, and features may not work or may fail to install. Use at your own risk and **back up your save before you start.**
 
 ---
 
 ## Table of Contents
 
+- [What's New in v2.0](#whats-new-in-v20)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
 - [Stamina Guide](#stamina-guide)
 - [Hotkey Reference](#hotkey-reference)
-- [On-Screen Notifications](#on-screen-notifications)
+- [On-Screen Overlay](#on-screen-overlay)
 - [Troubleshooting](#troubleshooting)
 - [Credits](#credits)
+
+---
+
+## What's New in v2.0
+
+- **New overlay.** A feature box with every hotkey and an ON/OFF badge, plus a status bar that lists the features that are currently active.
+- **Simpler stamina.** Pick a side with `NUMPAD 1` / `2` / `3` and the stamina hook installs itself. **Yellow and white stamina turn on together automatically.** There are no separate yellow/white keys anymore.
+- **New "Both" mode.** `NUMPAD 3` locks the stamina of both fighters at once.
+- **No more reset step.** The old per-fight reset (`NUMPAD 4`) is gone. The fighter is detected and re-locked automatically.
+- **Move Unlocker.** Unlocks all locked and empty move slots (Lv 0 to Lv 1).
+- **New hotkey layout.** Stamina uses `NUMPAD 1`, `2`, `3` and `0`. Career features moved to `NUMPAD 4` to `8`.
+- **`NUMPAD +` is now safe.** It no longer turns on Weekly Point.
+- **Weekly Point has no hotkey.** Manual only, because it is not recommended.
 
 ---
 
@@ -34,16 +49,17 @@
 
 | Feature | What it does | Hotkey |
 |---|---|---|
-| **Evolution Points** | When your Evo Points drop below 100, they are automatically set to **5000**. | `NUMPAD 9` |
-| **Fitness** | Locks Fitness at **PEAK**. | `NUMPAD /` |
-| **Move EXP** | Turn it on, then spar or fight. Moves you use are detected automatically and their EXP is boosted. Keep using a move until it reaches **level 5**. | `NUMPAD -` |
-| **Money** | When your money is below 30,000, it is automatically set to **5,000,000**. | `NUMPAD 0` |
-| **Stamina** | Locks **your fighter's** yellow and/or white stamina. See the [Stamina Guide](#stamina-guide). | `NUMPAD *`, `8`, `7` |
-| **All Career features** | Turns every career feature on or off at once (includes Weekly Point). | `NUMPAD +` |
+| **Stamina** | Locks yellow and white stamina for your fighter (left or right) or for both fighters. See the [Stamina Guide](#stamina-guide). | `NUMPAD 1` `2` `3` `0` |
+| **Money** | When your money is below 30,000, it is automatically set to **5,000,000**. | `NUMPAD 4` |
+| **Evolution Points** | When your Evo Points drop below 100, they are automatically set to **5000**. | `NUMPAD 5` |
+| **Fitness** | Locks Fitness at **PEAK**. | `NUMPAD 6` |
+| **Move Unlocker** | Unlocks all locked and empty move slots (Lv 0 to Lv 1). Turn it on, then open or re-enter the Moves menu. | `NUMPAD 7` |
+| **Move EXP** | Turn it on, then spar or fight. Moves you use are detected automatically and their EXP is boosted. Keep using a move until it reaches **level 5**. | `NUMPAD 8` |
+| **All Career features** | Turns Money, Evo Points, Fitness, Move Unlocker and Move EXP on or off at once. **Does not include Weekly Point.** | `NUMPAD +` |
 | **Weekly Point** | Locks Weekly Point at 100. **No hotkey**, enable it manually in the table. | Manual |
 
 > [!CAUTION]
-> **Weekly Point is not recommended.** It can break your Career Mode and you may have to start over. `NUMPAD +` also turns it on, so enable features one by one if you want to avoid it.
+> **Weekly Point is not recommended.** It can break your Career Mode and you may have to start over. That is why it has no hotkey and is not part of `NUMPAD +`.
 
 Every hotkey is a **toggle**: press once to turn the feature on, press again to turn it off.
 
@@ -51,7 +67,7 @@ Every hotkey is a **toggle**: press once to turn the feature on, press again to 
 
 ## Requirements
 
-- UFC 4 **CUSA14204**
+- UFC 4 **CUSA14204** or **CUSA14209**
 - [Cheat Engine](https://www.cheatengine.org/)
 - A keyboard with a **NUMPAD** (**NumLock must be ON**)
 
@@ -63,7 +79,7 @@ Every hotkey is a **toggle**: press once to turn the feature on, press again to 
 2. Open Cheat Engine and attach it to the UFC 4 process.
 3. Open `UFC4_CareerMode_Trainer.CT` in Cheat Engine.
 4. Press the hotkeys from the [Hotkey Reference](#hotkey-reference), or tick the entries manually in the table.
-5. Watch the [on-screen notification](#on-screen-notifications) to confirm each feature turned on.
+5. Watch the [on-screen overlay](#on-screen-overlay) to confirm each feature turned on.
 
 > Press each key **once** and wait a moment. Don't spam the keys.
 
@@ -71,45 +87,30 @@ Every hotkey is a **toggle**: press once to turn the feature on, press again to 
 
 ## Stamina Guide
 
-Stamina locks **your fighter's** yellow and white stamina only, not the opponent's. Each one can be enabled separately.
+Stamina locks **yellow and white stamina together**. You choose whose stamina to lock:
 
-### First time (once per game session)
+| Key | Result |
+|---|---|
+| `NUMPAD 1` | Lock the **LEFT** fighter |
+| `NUMPAD 2` | Lock the **RIGHT** fighter |
+| `NUMPAD 3` | Lock **BOTH** fighters |
+| `NUMPAD 0` | Turn stamina **OFF** |
+
+### How to use
 
 1. Enter a **fight**.
-2. Press `NUMPAD *` to install the stamina hook. Wait for the **"Stamina hook INSTALLED"** notification. Cheat Engine may freeze for a few seconds while it scans memory. That's normal.
-3. Turn on the stamina you want, one or both. **You only need to enable them once.** They stay on in later fights.
+2. Press `NUMPAD 1`, `2` or `3`.
 
-| Key | Stamina |
-|---|---|
-| `NUMPAD 8` | **Yellow** stamina (unlimited, never tired) |
-| `NUMPAD 7` | **White** stamina (held at max) |
+That is all. The first time you do this in a game session, the stamina hook installs itself. Cheat Engine may freeze for a few seconds while it scans memory, and that is normal. Wait for the overlay to show **"Stamina ... SELECTED"**.
 
-### Every new fight (required)
+Pressing the same key again turns stamina off, just like the other toggles. `NUMPAD 0` always turns it off.
 
-1. Press `NUMPAD 4` to **reset**.
-2. Play for a few seconds so the game detects both fighters.
-3. Select your side:
+### Notes
 
-| Key | Your position |
-|---|---|
-| `NUMPAD 5` | You are on the **LEFT** |
-| `NUMPAD 6` | You are on the **RIGHT** |
-
-When you see **"Player ... side SELECTED"**, stamina is working for your fighter.
-
-> [!IMPORTANT]
-> If you skip the reset and side selection in a new fight, stamina may not work correctly. Just repeat the steps above.
-
-<details>
-<summary><b>Manual fighter pick (backup)</b></summary>
-
-Use this only if side selection (`5` / `6`) fails.
-
-1. Press `NUMPAD 1` to test an object. Its stamina drops to 20.
-2. If **your** bar drops, press `NUMPAD 2` to select it.
-3. If it's not your bar, press `NUMPAD 1` again to test the next object.
-
-</details>
+- Stamina must be turned on from **inside a fight**, because the hook can only install there.
+- The hook stays installed after `NUMPAD 0`. Only stamina turns off. To remove the hook completely, untick **Stamina Master Hook** in the table, or press `NUMPAD *`.
+- `NUMPAD *` is optional. It installs or removes the hook by hand, but you normally never need it.
+- If stamina stops working in a new fight, press `NUMPAD 0`, then press your side again.
 
 ---
 
@@ -117,34 +118,37 @@ Use this only if side selection (`5` / `6`) fails.
 
 | Key | Action |
 |---|---|
-| `NUMPAD 9` | Evolution Points on/off |
-| `NUMPAD 0` | Money on/off |
-| `NUMPAD /` | Fitness (Peak) on/off |
-| `NUMPAD -` | Move EXP on/off |
-| `NUMPAD +` | All career features on/off (includes Weekly Point) |
-| `NUMPAD *` | Install / remove the Stamina hook |
-| `NUMPAD 8` | Yellow stamina on/off |
-| `NUMPAD 7` | White stamina on/off |
-| `NUMPAD 4` | Reset (every new fight) |
-| `NUMPAD 5` | Select LEFT side |
-| `NUMPAD 6` | Select RIGHT side |
-| `NUMPAD 3` | Turn off yellow and white stamina |
-| `NUMPAD 1` / `2` | Manual fighter pick (backup) |
+| `NUMPAD 1` | Stamina: LEFT fighter |
+| `NUMPAD 2` | Stamina: RIGHT fighter |
+| `NUMPAD 3` | Stamina: BOTH fighters |
+| `NUMPAD 0` | Stamina: OFF |
+| `NUMPAD 4` | Money on/off |
+| `NUMPAD 5` | Evolution Points on/off |
+| `NUMPAD 6` | Fitness (Peak) on/off |
+| `NUMPAD 7` | Move Unlocker on/off |
+| `NUMPAD 8` | Move EXP on/off |
+| `NUMPAD +` | All career features on/off (**without** Weekly Point) |
+| `NUMPAD *` | Install / remove the Stamina hook (optional) |
+| *(none)* | Weekly Point, manual only |
 
 ---
 
-## On-Screen Notifications
+## On-Screen Overlay
 
-A small notification box appears in the top-left corner of the screen every time you press a key, so you can tell it worked even in fullscreen.
+An overlay appears in the top-left corner of the screen every time you press a key, so you can tell it worked even in fullscreen.
 
-| Badge | Meaning |
+- **Feature box.** Lists every feature with its hotkey and a badge: **ON** (green) or **OFF** (grey). Stamina shows **LEFT**, **RIGHT** or **BOTH** when active. The box hides itself after a few seconds.
+- **Status bar.** A bar under the box lists the features that are currently active. It stays on screen as long as at least one feature is on.
+- **Message line.** The last line of the box shows the latest message.
+
+| Message color | Meaning |
 |---|---|
-| **ACTIVE** (green) | Feature turned on |
-| **OFF** (orange) | Feature turned off |
-| **LOADING** (blue) | Installing, please wait |
-| **ERROR** (red) | Something failed, see [Troubleshooting](#troubleshooting) |
+| Green | Feature turned on |
+| Orange | Feature turned off |
+| Blue | Installing, please wait |
+| Red | Something failed, see [Troubleshooting](#troubleshooting) |
 
-If you can't see the notifications, switch the game to **borderless or windowed** mode.
+If you can't see the overlay, switch the game to **borderless or windowed** mode.
 
 ---
 
@@ -153,8 +157,10 @@ If you can't see the notifications, switch the game to **borderless or windowed*
 | Problem | Fix |
 |---|---|
 | `FAILED to install` | You are not in Career Mode or a fight yet. Enter one, then press the key again. |
-| No notification appears | Switch the game to borderless or windowed mode. |
-| Stamina not working in a new fight | Press `NUMPAD 4`, play a few seconds, then press `NUMPAD 5` or `6` again. |
+| Stamina does nothing | Make sure you are **inside a fight**, then press `NUMPAD 1`, `2` or `3` again. |
+| Stamina stopped in a new fight | Press `NUMPAD 0`, then press your side again. |
+| Move Unlocker shows nothing | Open or re-enter the Moves menu after turning it on. |
+| No overlay appears | Switch the game to borderless or windowed mode. |
 | Keys do nothing | Check that **NumLock is ON** and the table is loaded in Cheat Engine. |
 | Hooks seem stuck | Restart the game, reattach Cheat Engine, and reload the table. |
 
